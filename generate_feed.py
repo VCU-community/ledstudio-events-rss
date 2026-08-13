@@ -62,12 +62,6 @@ class FeedError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class Resource:
-    name: str
-    url: str
-
-
-@dataclass(frozen=True)
 class Event:
     event_date: date
     start_time: time
@@ -78,7 +72,6 @@ class Event:
     registration_url: str
     anchor: str
     uid: str
-    resources: tuple[Resource, ...]
 
     @property
     def release_date(self) -> date:
@@ -206,19 +199,6 @@ def absolute_web_url(value: str, *, field: str) -> str:
     return url
 
 
-def resources_from_row(row: Mapping[str, str]) -> tuple[Resource, ...]:
-    resources: list[Resource] = []
-    for number in range(1, 21):
-        name = normalize_text(row.get(f"RESOURCE {number} NAME", ""))
-        url = normalize_text(row.get(f"RESOURCE {number} LINK", ""))
-        if not name and not url:
-            continue
-        if not name or not url:
-            raise FeedError(f"Resource {number} must have both a name and a link")
-        resources.append(Resource(name, absolute_web_url(url, field=f"Resource {number} link")))
-    return tuple(resources)
-
-
 def event_from_row(row: Mapping[str, str], row_number: int) -> Event:
     def required(column: str) -> str:
         value = normalize_text(row.get(column, ""))
@@ -247,7 +227,6 @@ def event_from_row(row: Mapping[str, str], row_number: int) -> Event:
             ),
             anchor=anchor,
             uid=uid,
-            resources=resources_from_row(row),
         )
     except FeedError as exc:
         if str(exc).startswith(f"Row {row_number}"):
@@ -305,13 +284,7 @@ def event_description_text(event: Event) -> str:
         f"Date: {display_date(event.event_date)}",
         f"Time: {time_text}",
         f"Location: {event.location}",
-        f"Register: {event.registration_url}",
     ]
-    if event.resources:
-        resources = "; ".join(
-            f"{resource.name} — {resource.url}" for resource in event.resources
-        )
-        parts.append(f"Resources: {resources}")
     parts.append(f"Event details: {event.event_url}")
     return " | ".join(parts)
 

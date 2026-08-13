@@ -38,18 +38,20 @@ class FeedTests(unittest.TestCase):
         self.assertIn(" | Date:", description)
         self.assertIn(" | Time: 10:00 a.m.", description)
         self.assertIn(" | Location:", description)
-        self.assertIn(" | Register: https://", description)
         self.assertIn(" | Event details: https://", description)
         self.assertNotIn("Resources:", description)
+        self.assertNotIn("Register:", description)
+        self.assertNotIn("example.edu/register", description)
         self.assertNotIn("TAGS", description)
         self.assertNotIn("recording", description.lower())
         self.assertNotIn("<", description)
 
-    def test_description_includes_resources_only_when_present(self):
+    def test_description_omits_resources_even_when_present(self):
         event = next(item for item in self.events if item.title == "Accessible & Engaging")
         description = feed.event_description_text(event)
-        self.assertIn("Resources:", description)
-        self.assertIn("Faculty guide", description)
+        self.assertNotIn("Resources:", description)
+        self.assertNotIn("Faculty guide", description)
+        self.assertNotIn("learning-resources/guide", description)
         self.assertIn("Accessible & Engaging", event.title)
 
     def test_rss_is_well_formed_and_has_stable_required_fields(self):
@@ -72,9 +74,9 @@ class FeedTests(unittest.TestCase):
         root = ET.fromstring(xml_bytes)
         self.assertEqual(root.findall("./channel/item"), [])
 
-    def test_relative_resource_urls_become_absolute(self):
+    def test_resource_columns_do_not_affect_event(self):
         event = next(item for item in self.events if item.title == "Accessible & Engaging")
-        self.assertEqual(event.resources[0].url, "https://ledstudio.vcu.edu/learning-resources/guide/")
+        self.assertFalse(hasattr(event, "resources"))
 
     def test_missing_required_column_fails(self):
         payload = feed.unwrap_gviz(self.source_text)
@@ -107,7 +109,8 @@ class FeedTests(unittest.TestCase):
             self.assertIn("LEDstudio Events RSS Preview", status)
             self.assertIn("No End Time Event", status)
             self.assertIn("An end time is not available.", status)
-            self.assertIn("Register: https://", status)
+            self.assertNotIn("Register: https://", status)
+            self.assertIn("Event details: https://", status)
             self.assertIn(" | Date:", status)
             self.assertIn('class="post-preview"', status)
             self.assertIn("Delayed: registration needed", status)

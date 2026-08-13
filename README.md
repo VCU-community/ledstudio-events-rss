@@ -31,11 +31,9 @@ Each RSS item includes:
 - Start time and end time when provided
 - Location
 - Full description
-- Registration link
-- Named resource links when provided
 - Link to the anchored event on the LEDstudio website
 
-Tags and recording links are intentionally excluded. A Resources section is not produced when an event has no resources.
+Registration, resources, tags, and recording links are intentionally excluded from the post body. The registration link is still required in the source before an event can enter the feed. Readers use the single anchored LEDstudio event link to reach registration and any available resources.
 
 The RSS description uses plain text with spaced vertical-bar separators (` | `). commUNity strips RSS description HTML, so explicit text separators preserve readable boundaries even when it collapses paragraph and line-break markup.
 
@@ -97,7 +95,6 @@ The workflow fails without deploying when:
 - A date or time cannot be parsed.
 - A URL is unsafe or invalid.
 - Two different events have the same GUID.
-- A resource has only a name or only a link.
 - The generated RSS is not well-formed XML.
 
 A missing registration link produces a warning and delays that event; it does not fail the whole feed.
