@@ -294,44 +294,26 @@ def display_time(value: time) -> str:
     return f"{hour}:{minute} {meridiem}"
 
 
-def event_description_html(event: Event) -> str:
-    paragraphs = [part.strip() for part in re.split(r"\n\s*\n", event.description) if part.strip()]
-    body = "".join(
-        "<p>" + html.escape(paragraph).replace("\n", "<br>") + "</p>"
-        for paragraph in paragraphs
-    )
+def event_description_text(event: Event) -> str:
+    description = re.sub(r"\s+", " ", event.description).strip()
     time_text = display_time(event.start_time)
     if event.end_time is not None:
         time_text += "–" + display_time(event.end_time)
-    body += (
-        "<p>"
-        f"<strong>Date:</strong> {html.escape(display_date(event.event_date))}<br>"
-        f"<strong>Time:</strong> {html.escape(time_text)}<br>"
-        f"<strong>Location:</strong> {html.escape(event.location)}"
-        "</p>"
-    )
-    body += (
-        '<p><a href="'
-        + html.escape(event.registration_url, quote=True)
-        + '">Register for this event</a></p>'
-    )
+
+    parts = [
+        description,
+        f"Date: {display_date(event.event_date)}",
+        f"Time: {time_text}",
+        f"Location: {event.location}",
+        f"Register: {event.registration_url}",
+    ]
     if event.resources:
-        body += "<p><strong>Resources:</strong></p><ul>"
-        for resource in event.resources:
-            body += (
-                '<li><a href="'
-                + html.escape(resource.url, quote=True)
-                + '">'
-                + html.escape(resource.name)
-                + "</a></li>"
-            )
-        body += "</ul>"
-    body += (
-        '<p><a href="'
-        + html.escape(event.event_url, quote=True)
-        + '">View this event on the LEDstudio website</a></p>'
-    )
-    return body
+        resources = "; ".join(
+            f"{resource.name} — {resource.url}" for resource in event.resources
+        )
+        parts.append(f"Resources: {resources}")
+    parts.append(f"Event details: {event.event_url}")
+    return " | ".join(parts)
 
 
 def add_text(parent: ET.Element, name: str, value: str, attributes: dict[str, str] | None = None) -> ET.Element:
@@ -369,7 +351,7 @@ def build_rss(events: Sequence[Event], built_at: datetime) -> bytes:
         add_text(item, "guid", event.guid, {"isPermaLink": "false"})
         release_at = datetime.combine(event.release_date, time(9, 0), SOURCE_TIMEZONE)
         add_text(item, "pubDate", format_datetime(release_at.astimezone(timezone.utc), usegmt=True))
-        add_text(item, "description", event_description_html(event))
+        add_text(item, "description", event_description_text(event))
 
     ET.indent(rss, space="  ")
     document = ET.tostring(rss, encoding="utf-8", xml_declaration=True)
@@ -403,7 +385,7 @@ def build_status_page(selection: Selection, built_at: datetime, source_count: in
             '<article class="post-preview">'
             f'<h2><a href="{html.escape(event.event_url, quote=True)}">'
             f"{html.escape(event.title)}</a></h2>"
-            f'<div class="post-body">{event_description_html(event)}</div>'
+            f'<p class="post-body">{html.escape(event_description_text(event))}</p>'
             "</article>"
             for event in selection.published
         )
@@ -427,10 +409,7 @@ def build_status_page(selection: Selection, built_at: datetime, source_count: in
     .post-preview {{ background: #fff; border: 1px solid #dfe2e7; border-radius: .65rem; padding: 1.4rem; margin: 1.25rem 0; box-shadow: 0 .15rem .55rem rgb(0 0 0 / 7%); }}
     .post-preview h2 {{ font-size: 1.25rem; margin: 0 0 1rem; }}
     .post-preview h2 a {{ color: #222; text-decoration: none; }}
-    .post-body p:first-child {{ margin-top: 0; }}
-    .post-body p:last-child {{ margin-bottom: 0; }}
-    .post-body ul {{ padding-left: 1.35rem; }}
-    .post-body a {{ font-weight: 650; }}
+    .post-body {{ margin: 0; }}
     .summary {{ background: #f4f4f4; padding: 1rem; border-left: .35rem solid #f8b300; }}
     .empty {{ font-style: italic; }}
   </style>

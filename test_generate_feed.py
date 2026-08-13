@@ -34,21 +34,23 @@ class FeedTests(unittest.TestCase):
 
     def test_description_has_requested_fields_and_omits_tags_recording_and_empty_resources(self):
         event = next(item for item in self.events if item.title == "No End Time Event")
-        description = feed.event_description_html(event)
-        self.assertIn("<strong>Date:</strong>", description)
-        self.assertIn("<strong>Time:</strong> 10:00 a.m.", description)
-        self.assertIn("<strong>Location:</strong>", description)
-        self.assertIn("Register for this event", description)
+        description = feed.event_description_text(event)
+        self.assertIn(" | Date:", description)
+        self.assertIn(" | Time: 10:00 a.m.", description)
+        self.assertIn(" | Location:", description)
+        self.assertIn(" | Register: https://", description)
+        self.assertIn(" | Event details: https://", description)
         self.assertNotIn("Resources:", description)
         self.assertNotIn("TAGS", description)
         self.assertNotIn("recording", description.lower())
+        self.assertNotIn("<", description)
 
     def test_description_includes_resources_only_when_present(self):
         event = next(item for item in self.events if item.title == "Accessible & Engaging")
-        description = feed.event_description_html(event)
+        description = feed.event_description_text(event)
         self.assertIn("Resources:", description)
         self.assertIn("Faculty guide", description)
-        self.assertIn("&amp;", description)
+        self.assertIn("Accessible & Engaging", event.title)
 
     def test_rss_is_well_formed_and_has_stable_required_fields(self):
         selection = feed.select_events(self.events, date(2026, 8, 13))
@@ -105,7 +107,8 @@ class FeedTests(unittest.TestCase):
             self.assertIn("LEDstudio Events RSS Preview", status)
             self.assertIn("No End Time Event", status)
             self.assertIn("An end time is not available.", status)
-            self.assertIn("Register for this event", status)
+            self.assertIn("Register: https://", status)
+            self.assertIn(" | Date:", status)
             self.assertIn('class="post-preview"', status)
             self.assertIn("Delayed: registration needed", status)
 

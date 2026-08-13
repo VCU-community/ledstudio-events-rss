@@ -37,6 +37,8 @@ Each RSS item includes:
 
 Tags and recording links are intentionally excluded. A Resources section is not produced when an event has no resources.
 
+The RSS description uses plain text with spaced vertical-bar separators (` | `). commUNity strips RSS description HTML, so explicit text separators preserve readable boundaries even when it collapses paragraph and line-break markup.
+
 ## Stable event identity
 
 The RSS GUID prevents commUNity from creating the same post more than once.
@@ -69,7 +71,7 @@ python generate_feed.py
 
 Generated files are written to `public/index.html` and `public/rss.xml`. The `public` directory is intentionally ignored by Git because GitHub Pages receives it as a workflow artifact.
 
-The generated `index.html` renders the same title and HTML body placed in each RSS item so it can be used as a content preview. commUNity still controls its own final typography and link styling.
+The generated `index.html` renders the same title and flattened plain-text body placed in each RSS item so it can be used as a content preview. commUNity still controls its own final typography and automatic URL styling.
 
 For a repeatable historical-date check:
 
