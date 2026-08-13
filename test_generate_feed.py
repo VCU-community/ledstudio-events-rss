@@ -102,6 +102,11 @@ class FeedTests(unittest.TestCase):
             self.assertEqual(len(selection.published), 2)
             self.assertTrue((output / "rss.xml").is_file())
             status = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn("LEDstudio Events RSS Preview", status)
+            self.assertIn("No End Time Event", status)
+            self.assertIn("An end time is not available.", status)
+            self.assertIn("Register for this event", status)
+            self.assertIn('class="post-preview"', status)
             self.assertIn("Delayed: registration needed", status)
 
 

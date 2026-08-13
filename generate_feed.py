@@ -397,6 +397,19 @@ def build_status_page(selection: Selection, built_at: datetime, source_count: in
             "<p>These eligible events will enter the feed after a registration link is added.</p>"
             + event_list(selection.delayed)
         )
+
+    if selection.published:
+        previews = "".join(
+            '<article class="post-preview">'
+            f'<h2><a href="{html.escape(event.event_url, quote=True)}">'
+            f"{html.escape(event.title)}</a></h2>"
+            f'<div class="post-body">{event_description_html(event)}</div>'
+            "</article>"
+            for event in selection.published
+        )
+    else:
+        previews = '<p class="empty">No events are currently inside the publication window.</p>'
+
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -404,23 +417,42 @@ def build_status_page(selection: Selection, built_at: datetime, source_count: in
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LEDstudio Events RSS</title>
   <style>
-    body {{ font: 1rem/1.55 system-ui, sans-serif; max-width: 52rem; margin: 3rem auto; padding: 0 1rem; color: #222; }}
+    :root {{ color-scheme: light; }}
+    * {{ box-sizing: border-box; }}
+    body {{ font: 1rem/1.55 system-ui, sans-serif; max-width: 52rem; margin: 3rem auto; padding: 0 1rem; color: #222; background: #f5f6f8; }}
     h1, h2 {{ line-height: 1.2; }}
+    a {{ color: #2657a7; }}
+    .intro, .technical {{ background: #fff; border: 1px solid #dfe2e7; border-radius: .65rem; padding: 1.25rem; }}
+    .technical {{ margin-top: 2rem; }}
+    .post-preview {{ background: #fff; border: 1px solid #dfe2e7; border-radius: .65rem; padding: 1.4rem; margin: 1.25rem 0; box-shadow: 0 .15rem .55rem rgb(0 0 0 / 7%); }}
+    .post-preview h2 {{ font-size: 1.25rem; margin: 0 0 1rem; }}
+    .post-preview h2 a {{ color: #222; text-decoration: none; }}
+    .post-body p:first-child {{ margin-top: 0; }}
+    .post-body p:last-child {{ margin-bottom: 0; }}
+    .post-body ul {{ padding-left: 1.35rem; }}
+    .post-body a {{ font-weight: 650; }}
     .summary {{ background: #f4f4f4; padding: 1rem; border-left: .35rem solid #f8b300; }}
+    .empty {{ font-style: italic; }}
   </style>
 </head>
 <body>
-  <h1>LEDstudio Events RSS</h1>
-  <p>This feed releases eligible LEDstudio events two weeks before their event dates.</p>
-  <p><a href="rss.xml">Open rss.xml</a> · <a href="{html.escape(SOURCE_PAGE_URL, quote=True)}">View source events</a></p>
-  <div class="summary">
-    <strong>Last successful build:</strong> {html.escape(built_at.astimezone(SOURCE_TIMEZONE).isoformat(timespec='seconds'))}<br>
-    <strong>Source rows:</strong> {source_count}<br>
-    <strong>Items in feed:</strong> {len(selection.published)}
-  </div>
-  <h2>Items currently in the feed</h2>
-  {event_list(selection.published)}
-  {delayed_section}
+  <section class="intro">
+    <h1>LEDstudio Events RSS Preview</h1>
+    <p>The content below mirrors what each current RSS item sends to commUNity. Final typography and link styling are controlled by commUNity.</p>
+    <p><a href="rss.xml">Open rss.xml</a> · <a href="{html.escape(SOURCE_PAGE_URL, quote=True)}">View source events</a></p>
+  </section>
+  <main>
+    {previews}
+  </main>
+  <section class="technical">
+    <h2>Feed status</h2>
+    <div class="summary">
+      <strong>Last successful build:</strong> {html.escape(built_at.astimezone(SOURCE_TIMEZONE).isoformat(timespec='seconds'))}<br>
+      <strong>Source rows:</strong> {source_count}<br>
+      <strong>Items in feed:</strong> {len(selection.published)}
+    </div>
+    {delayed_section}
+  </section>
 </body>
 </html>
 """
@@ -475,4 +507,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

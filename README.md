@@ -4,7 +4,7 @@ This project creates an RSS feed for Beekeeper/commUNity from LEDstudio's public
 
 ## Public addresses
 
-- Status page: `https://vcu-community.github.io/ledstudio-events-rss/`
+- Post-content preview and status page: `https://vcu-community.github.io/ledstudio-events-rss/`
 - RSS feed: `https://vcu-community.github.io/ledstudio-events-rss/rss.xml`
 - Source events: `https://ledstudio.vcu.edu/news-and-events/events/`
 
@@ -68,6 +68,8 @@ python generate_feed.py
 ```
 
 Generated files are written to `public/index.html` and `public/rss.xml`. The `public` directory is intentionally ignored by Git because GitHub Pages receives it as a workflow artifact.
+
+The generated `index.html` renders the same title and HTML body placed in each RSS item so it can be used as a content preview. commUNity still controls its own final typography and link styling.
 
 For a repeatable historical-date check:
 
